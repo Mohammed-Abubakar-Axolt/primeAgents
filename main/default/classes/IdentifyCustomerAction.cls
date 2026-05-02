@@ -105,5 +105,7 @@ public class IdentifyCustomerAction {
     public static void setSessionVerified(String accountId) {
         Account acc = new Account(Id = accountId, Is_Session_Verified__c = true);
         update acc;
+
+        System.debug('Session verified for Account ID: ' + accountId);
     }
 }

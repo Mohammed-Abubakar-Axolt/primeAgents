@@ -65,7 +65,7 @@ public class GetBankingDetailsAction {
                 innerData.loanOutstanding = 0.00;
                 
                 for (FinancialAccount fa : allAccounts) {
-                    if (fa.Type == 'Checking Account' || fa.Type == 'Bank Account') {
+                    if (fa.Type == 'Checking') {
                         innerData.checkingBalance = fa.Current_Balance__c;
                     } else if (fa.Type == 'Credit Card') {
                         innerData.creditCardBalance = fa.TotalOutstandingAmount; 
@@ -78,7 +78,6 @@ public class GetBankingDetailsAction {
                 List<FinancialAccountTransaction> transactions = [SELECT Id, Amount, TransactionDate, Description, Type 
                                                                   FROM FinancialAccountTransaction 
                                                                   WHERE FinancialAccount.Primary_Owner__c = :acc.Id 
-                                                                  AND FinancialAccount.Type IN ('Checking Account', 'Bank Account')
                                                                   ORDER BY TransactionDate DESC LIMIT 5];
                 
                 innerData.transactionsJson = JSON.serialize(transactions);
