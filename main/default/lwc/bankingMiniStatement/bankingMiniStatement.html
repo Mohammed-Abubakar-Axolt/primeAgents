@@ -1,16 +1,38 @@
 <template>
-    <lightning-card title={accountName} icon-name="standard:account">
+    <lightning-card icon-name="standard:omni_supervisor" title="Customer 360 Profile">
+        
         <div class="slds-p-horizontal_medium">
-            <!-- Balance Display -->
-            <div class="slds-m-bottom_medium slds-text-align_center">
-                <p class="slds-text-title_caps slds-text-color_weak">Available Balance</p>
-                <p class="slds-text-heading_large slds-text-color_success">
-                    <lightning-formatted-number value={currentBalance} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>
-                </p>
+            <!-- 360 Profile Header -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds-p-bottom_small slds-border_bottom">
+                <div>
+                    <p class="slds-text-heading_small"><strong>{customerName}</strong></p>
+                    <p class="slds-text-body_small slds-text-color_weak">Prefers: {preferredLanguage}</p>
+                </div>
+                <div class="slds-text-align_right">
+                    <p class="slds-text-body_small slds-text-color_weak">Retention Risk</p>
+                    <lightning-badge label={churnRisk} class={riskBadgeClass}></lightning-badge>
+                </div>
             </div>
 
-            <!-- Mini Statement List -->
-            <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_small">Recent Transactions</p>
+            <!-- Portfolio Summary Grid -->
+            <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">Portfolio Overview</p>
+            <div class="slds-grid slds-wrap slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <p class="slds-text-body_small">Checking Available</p>
+                    <p class="slds-text-color_success slds-text-title_bold">₹<lightning-formatted-number value={checkingBalance}></lightning-formatted-number></p>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <p class="slds-text-body_small">Credit Card Due</p>
+                    <p class="slds-text-color_error slds-text-title_bold">₹<lightning-formatted-number value={creditCardBalance}></lightning-formatted-number></p>
+                </div>
+                <div class="slds-col slds-size_1-of-2">
+                    <p class="slds-text-body_small">Home Loan Remaining</p>
+                    <p class="slds-text-title_bold">₹<lightning-formatted-number value={loanOutstanding}></lightning-formatted-number></p>
+                </div>
+            </div>
+
+            <!-- Mini Statement -->
+            <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_small slds-m-top_medium">Recent Checking Transactions</p>
             <ul class="slds-has-dividers_bottom-space">
                 <template for:each={parsedTransactions} for:item="txn">
                     <li key={txn.Id} class="slds-item slds-grid slds-grid_align-spread slds-p-vertical_x-small">
@@ -20,7 +42,7 @@
                         </div>
                         <div class="slds-text-align_right">
                             <p class={txn.amountClass}>
-                                {txn.sign}<lightning-formatted-number value={txn.Amount} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>
+                                {txn.sign}₹<lightning-formatted-number value={txn.Amount}></lightning-formatted-number>
                             </p>
                         </div>
                     </li>
