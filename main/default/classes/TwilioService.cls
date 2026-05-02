@@ -12,11 +12,14 @@ public class TwilioService {
     // We use @future so this callout runs asynchronously and doesn't block the UI
     @Future(callout=true)
     public static void sendSMS(String toPhone, String messageBody) {
+        System.debug('--- TWILIO SERVICE TRIGGERED ---');
+        System.debug('Original toPhone: ' + toPhone);
         
-        // Ensure the phone number has a country code (e.g., +91 for India)
+        // Ensure country code
         if(!toPhone.startsWith('+')) {
-            toPhone = '+91' + toPhone; // Defaulting to India for this example
+            toPhone = '+91' + toPhone; 
         }
+        System.debug('Formatted toPhone (with country code): ' + toPhone);
         
         String endpoint = 'https://api.twilio.com/2010-04-01/Accounts/' + ACCOUNT_SID + '/Messages.json';
         
@@ -24,28 +27,29 @@ public class TwilioService {
         req.setEndpoint(endpoint);
         req.setMethod('POST');
         
-        // Twilio expects Basic Authentication
         String authHeader = 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(ACCOUNT_SID + ':' + AUTH_TOKEN));
         req.setHeader('Authorization', authHeader);
         req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
         
-        // Construct the URL-encoded payload
         String payload = 'To=' + EncodingUtil.urlEncode(toPhone, 'UTF-8') + 
                          '&From=' + EncodingUtil.urlEncode(TWILIO_NUMBER, 'UTF-8') + 
                          '&Body=' + EncodingUtil.urlEncode(messageBody, 'UTF-8');
         
-        req.setBody(payload);
+        System.debug('Twilio Payload: ' + payload);
         
         Http http = new Http();
         try {
             HttpResponse res = http.send(req);
+            System.debug('Twilio HTTP Status Code: ' + res.getStatusCode());
+            System.debug('Twilio Raw Response Body: ' + res.getBody()); // THIS WILL TELL US THE ERROR
+            
             if (res.getStatusCode() == 201) {
-                System.debug('Twilio Success: SMS Sent');
+                System.debug('Twilio Success: SMS Sent correctly!');
             } else {
-                System.debug('Twilio Error ' + res.getStatusCode() + ': ' + res.getBody());
+                System.debug('Twilio Failure: Something went wrong with the API call.');
             }
         } catch(Exception e) {
-            System.debug('Apex Callout Exception: ' + e.getMessage());
+            System.debug('CRITICAL Apex Callout Exception: ' + e.getMessage());
         }
     }
 }

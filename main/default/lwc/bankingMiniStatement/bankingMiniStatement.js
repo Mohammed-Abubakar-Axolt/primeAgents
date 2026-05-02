@@ -5,7 +5,7 @@ import setSessionVerified from '@salesforce/apex/IdentifyCustomerAction.setSessi
 export default class BankingMiniStatement extends LightningElement {
     // Inputs from Apex Invocable
     @api accountId;
-    @api isVerified; 
+    @api isVerified;
     @api customerName;
     @api maskedPhone;
     @api churnRisk;
@@ -15,38 +15,55 @@ export default class BankingMiniStatement extends LightningElement {
     @api loanOutstanding;
     @api transactionsJson;
 
-    // Local State
+    @track hasInitiatedOtp = false;
     @track sessionVerifiedLocal = false;
     @track parsedTransactions = [];
     @track generatedOtp = '';
     @track userEnteredOtp = '';
     @track showError = false;
+    @track showCopyToast = false;
 
     get riskBadgeClass() {
-        if (this.churnRisk === 'High') return 'slds-theme_error';
-        if (this.churnRisk === 'Medium') return 'slds-theme_warning';
-        return 'slds-theme_success';
+        if (this.churnRisk === 'High') return 'risk-badge risk-high';
+        if (this.churnRisk === 'Medium') return 'risk-badge risk-medium';
+        return 'risk-badge risk-low';
+    }
+
+    get hasTransactions() {
+        return this.parsedTransactions.length > 0;
+    }
+
+    get transactionCount() {
+        return this.parsedTransactions.length;
     }
 
     connectedCallback() {
-        this.sessionVerifiedLocal = this.isVerified;
-        
-        // If not verified, trigger the Twilio Apex class immediately
-        if (!this.sessionVerifiedLocal && this.accountId) {
+        this.sessionVerifiedLocal = this.isVerified === true || this.isVerified === 'true';
+
+        if (!this.sessionVerifiedLocal && this.accountId && !this.hasInitiatedOtp) {
+            this.hasInitiatedOtp = true;
             this.sendNewOtp();
         }
 
-        // Parse transactions for the dashboard
         if (this.transactionsJson) {
             try {
-                let rawTxns = JSON.parse(this.transactionsJson);
+                const rawTxns = JSON.parse(this.transactionsJson);
                 this.parsedTransactions = rawTxns.map(txn => {
-                    let isCredit = txn.Type === 'Credit';
+                    const isCredit = txn.Type === 'Credit';
                     return {
                         ...txn,
-                        amountClass: isCredit ? 'slds-text-color_success slds-text-title_bold' : 'slds-text-color_error',
+                        amountClass: isCredit
+                            ? 'txn-amount amount-credit'
+                            : 'txn-amount amount-debit',
+                        iconName: isCredit ? 'utility:arrowup' : 'utility:arrowdown',
                         sign: isCredit ? '+' : '-',
-                        formattedDate: txn.TransactionDate ? new Date(txn.TransactionDate).toLocaleDateString() : 'Recent' 
+                        formattedDate: txn.TransactionDate
+                            ? new Date(txn.TransactionDate).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric'
+                              })
+                            : 'Recent'
                     };
                 });
             } catch (error) {
@@ -56,13 +73,21 @@ export default class BankingMiniStatement extends LightningElement {
     }
 
     sendNewOtp() {
+        console.log('LWC: Initiating OTP request for Account ID:', this.accountId);
+
         generateAndSendOtp({ accountId: this.accountId })
             .then(result => {
+                console.log('LWC: Apex returned OTP successfully:', result);
                 this.generatedOtp = result;
                 this.userEnteredOtp = '';
                 this.showError = false;
             })
-            .catch(error => { console.error('Error generating OTP', error); });
+            .catch(error => {
+                console.error(
+                    'LWC: CRITICAL ERROR calling Apex generateAndSendOtp:',
+                    JSON.stringify(error)
+                );
+            });
     }
 
     handleOtpChange(event) {
@@ -72,12 +97,10 @@ export default class BankingMiniStatement extends LightningElement {
     verifyOtp() {
         if (this.userEnteredOtp === this.generatedOtp) {
             this.showError = false;
-            
-            // 1. Tell Salesforce the session is now secure
+
             setSessionVerified({ accountId: this.accountId });
-            
-            // 2. Instantly switch the UI to show the Banking Dashboard!
-            this.sessionVerifiedLocal = true; 
+
+            this.sessionVerifiedLocal = true;
         } else {
             this.showError = true;
         }
@@ -85,5 +108,18 @@ export default class BankingMiniStatement extends LightningElement {
 
     resendOtp() {
         this.sendNewOtp();
+    }
+
+    copyPrompt(event) {
+        const textToCopy = event.currentTarget.dataset.prompt;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy);
+            this.showCopyToast = true;
+
+            setTimeout(() => {
+                this.showCopyToast = false;
+            }, 2000);
+        }
     }
 }

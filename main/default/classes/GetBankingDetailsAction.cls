@@ -4,10 +4,14 @@ public class GetBankingDetailsAction {
         @InvocableVariable(required=true description='The 10-digit mobile number provided by the user')
         public String mobileNumber;
     }
+
+    public class ActionOutputouter {
+        @InvocableVariable public ActionOutput actionRes;
+    }
     
     public class ActionOutput {
         @InvocableVariable public String accountId;
-        @InvocableVariable public Boolean isVerified; // Tells the LWC which screen to show
+        @InvocableVariable public Boolean isVerified; 
         @InvocableVariable public String customerName;
         @InvocableVariable public String maskedPhone;
         @InvocableVariable public String churnRisk;
@@ -16,14 +20,20 @@ public class GetBankingDetailsAction {
         @InvocableVariable public Decimal creditCardBalance;
         @InvocableVariable public Decimal loanOutstanding;
         @InvocableVariable public String transactionsJson;
+        
+        // NEW: Dynamic message to guide the Agent and User
+        @InvocableVariable public String statusMessage; 
     }
 
     @InvocableMethod(label='Get Customer 360 and Mini Statement' description='Authenticates user and fetches full profile.')
-    public static List<ActionOutput> getBankingDetails(List<ActionInput> inputs) {
-        List<ActionOutput> outputs = new List<ActionOutput>();
+    public static List<ActionOutputouter> getBankingDetails(List<ActionInput> inputs) {
+        
+        List<ActionOutputouter> finalOutputs = new List<ActionOutputouter>();
         
         for (ActionInput input : inputs) {
-            ActionOutput output = new ActionOutput();
+            
+            ActionOutputouter outerResult = new ActionOutputouter();
+            ActionOutput innerData = new ActionOutput();
             
             try {
                 // 1. Find Customer by Phone
@@ -31,29 +41,36 @@ public class GetBankingDetailsAction {
                                FROM Account 
                                WHERE Phone = :input.mobileNumber LIMIT 1];
                 
-                output.accountId = acc.Id;
-                output.customerName = acc.Name;
-                output.isVerified = acc.Is_Session_Verified__c;
-                output.maskedPhone = '******' + input.mobileNumber.right(4);
-                output.churnRisk = acc.Churn_Risk_Level__c != null ? acc.Churn_Risk_Level__c : 'Low';
-                output.preferredLanguage = acc.Preferred_Language__c != null ? acc.Preferred_Language__c : 'English';
+                innerData.accountId = acc.Id;
+                innerData.customerName = acc.Name;
+                innerData.isVerified = acc.Is_Session_Verified__c;
+                innerData.maskedPhone = '******' + input.mobileNumber.right(4);
+                innerData.churnRisk = acc.Churn_Risk_Level__c != null ? acc.Churn_Risk_Level__c : 'Low';
+                innerData.preferredLanguage = acc.Preferred_Language__c != null ? acc.Preferred_Language__c : 'English';
                 
-                // 2. Fetch Financial Accounts (FIXED SOQL)
+                // --- NEW: Dynamic Messaging Logic ---
+                if (innerData.isVerified == true) {
+                    innerData.statusMessage = 'Session is already verified. Retrieving the 360-degree banking profile and recent transactions for ' + acc.Name + '.';
+                } else {
+                    innerData.statusMessage = 'A secure verification OTP has been dispatched to your registered mobile number (' + innerData.maskedPhone + '). Please complete the verification in the secure widget below to access your banking details.';
+                }
+                
+                // 2. Fetch Financial Accounts 
                 List<FinancialAccount> allAccounts = [SELECT Type, Current_Balance__c, TotalOutstandingAmount 
                                                       FROM FinancialAccount 
                                                       WHERE Primary_Owner__c = :acc.Id];
                 
-                output.checkingBalance = 0.00;
-                output.creditCardBalance = 0.00;
-                output.loanOutstanding = 0.00;
+                innerData.checkingBalance = 0.00;
+                innerData.creditCardBalance = 0.00;
+                innerData.loanOutstanding = 0.00;
                 
                 for (FinancialAccount fa : allAccounts) {
                     if (fa.Type == 'Checking Account' || fa.Type == 'Bank Account') {
-                        output.checkingBalance = fa.Current_Balance__c;
+                        innerData.checkingBalance = fa.Current_Balance__c;
                     } else if (fa.Type == 'Credit Card') {
-                        output.creditCardBalance = fa.TotalOutstandingAmount; // FIXED
+                        innerData.creditCardBalance = fa.TotalOutstandingAmount; 
                     } else if (fa.Type == 'Mortgage' || fa.Type == 'Loan') {
-                        output.loanOutstanding = fa.TotalOutstandingAmount; // FIXED
+                        innerData.loanOutstanding = fa.TotalOutstandingAmount; 
                     }
                 }
                 
@@ -64,14 +81,19 @@ public class GetBankingDetailsAction {
                                                                   AND FinancialAccount.Type IN ('Checking Account', 'Bank Account')
                                                                   ORDER BY TransactionDate DESC LIMIT 5];
                 
-                output.transactionsJson = JSON.serialize(transactions);
+                innerData.transactionsJson = JSON.serialize(transactions);
                 
             } catch (Exception e) {
                 System.debug('Error: ' + e.getMessage());
-                // If phone not found, leave isVerified null/false
+                // --- NEW: Error Messaging ---
+                innerData.isVerified = false;
+                innerData.statusMessage = 'I could not find a customer profile linked to the mobile number ' + input.mobileNumber + '. Please check the number and try again.';
             }
-            outputs.add(output);
+            
+            outerResult.actionRes = innerData;
+            finalOutputs.add(outerResult);
         }
-        return outputs;
+        
+        return finalOutputs;
     }
 }

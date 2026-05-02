@@ -1,81 +1,177 @@
 <template>
-    <lightning-card icon-name="standard:omni_supervisor" title="Banking Assistant">
-        
-        <!-- ================= OTP VERIFICATION SCREEN ================= -->
+    <article class="banking-shell">
+        <header class="app-header">
+            <div class="brand-mark">
+                <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+            </div>
+            <div class="header-copy">
+                <p class="eyebrow">Banking Assistant</p>
+                <h2>Mini Statement</h2>
+            </div>
+            <template if:true={sessionVerifiedLocal}>
+                <lightning-badge label="Verified" class="verified-badge"></lightning-badge>
+            </template>
+        </header>
+
         <template if:false={sessionVerifiedLocal}>
-            <div class="slds-p-around_medium slds-text-align_center">
-                <lightning-icon icon-name="standard:shield" size="large" class="slds-m-bottom_medium"></lightning-icon>
-                <p class="slds-text-heading_small slds-m-bottom_small">Authentication Required</p>
-                <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
-                    We've sent a secure OTP via SMS to {maskedPhone}.
+            <section class="auth-panel" aria-labelledby="auth-title">
+                <div class="secure-icon">
+                    <lightning-icon icon-name="utility:lock" variant="inverse" size="small"></lightning-icon>
+                </div>
+                <p class="eyebrow">Secure Step</p>
+                <h3 id="auth-title">Verify customer identity</h3>
+                <p class="helper-text">
+                    We've sent a 4-digit OTP to <strong>{maskedPhone}</strong>.
                 </p>
 
-                <!-- Hackathon Demo Magic -->
-                <p class="slds-text-body_small slds-text-color_success slds-m-bottom_small">
-                    [Demo Only] Your OTP is: <strong>{generatedOtp}</strong>
+                <p class="demo-code">
+                    Demo OTP: <strong>{generatedOtp}</strong>
                 </p>
 
-                <div class="slds-form-element slds-m-bottom_medium slds-align_absolute-center" style="width: 150px;">
-                    <lightning-input type="text" max-length="4" variant="label-hidden" value={userEnteredOtp} onchange={handleOtpChange} placeholder="Enter OTP" class="slds-text-align_center"></lightning-input>
+                <div class="otp-field">
+                    <lightning-input
+                        type="text"
+                        max-length="4"
+                        variant="label-hidden"
+                        value={userEnteredOtp}
+                        onchange={handleOtpChange}
+                        placeholder="Enter OTP"
+                        class="otp-input">
+                    </lightning-input>
                 </div>
 
                 <template if:true={showError}>
-                    <p class="slds-text-color_error slds-m-bottom_small">Incorrect OTP. Please try again.</p>
+                    <div class="error-message" role="alert">
+                        <lightning-icon icon-name="utility:error" variant="error" size="xx-small"></lightning-icon>
+                        <span>Incorrect OTP. Please try again.</span>
+                    </div>
                 </template>
 
-                <lightning-button variant="brand" label="Verify Identity" onclick={verifyOtp} class="slds-m-bottom_medium slds-button_stretch"></lightning-button>
-                <a onclick={resendOtp}>Resend OTP</a>
-            </div>
+                <div class="auth-actions">
+                    <lightning-button
+                        variant="brand"
+                        label="Verify Identity"
+                        onclick={verifyOtp}
+                        class="primary-action">
+                    </lightning-button>
+                    <button type="button" class="link-button" onclick={resendOtp}>Resend OTP</button>
+                </div>
+            </section>
         </template>
 
-        <!-- ================= 360 BANKING DASHBOARD SCREEN ================= -->
         <template if:true={sessionVerifiedLocal}>
-            <div class="slds-p-horizontal_medium">
-                
-                <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds-p-bottom_small slds-border_bottom">
+            <section class="customer-panel" aria-label="Customer summary">
+                <div class="customer-main">
                     <div>
-                        <p class="slds-text-heading_small"><strong>{customerName}</strong></p>
-                        <p class="slds-text-body_small slds-text-color_weak">Prefers: {preferredLanguage}</p>
+                        <p class="customer-name">{customerName}</p>
+                        <p class="customer-detail">
+                            <lightning-icon icon-name="utility:world" size="xx-small"></lightning-icon>
+                            <span>{preferredLanguage}</span>
+                        </p>
                     </div>
-                    <div class="slds-text-align_right">
-                        <p class="slds-text-body_small slds-text-color_weak">Retention Risk</p>
+                    <div class="risk-block">
+                        <span>Retention Risk</span>
                         <lightning-badge label={churnRisk} class={riskBadgeClass}></lightning-badge>
                     </div>
                 </div>
+            </section>
 
-                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">Portfolio Overview</p>
-                <div class="slds-grid slds-wrap slds-m-bottom_medium">
-                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
-                        <p class="slds-text-body_small">Checking Available</p>
-                        <p class="slds-text-color_success slds-text-title_bold">₹<lightning-formatted-number value={checkingBalance}></lightning-formatted-number></p>
+            <section class="section-block" aria-labelledby="portfolio-title">
+                <div class="section-heading">
+                    <h3 id="portfolio-title">Portfolio Overview</h3>
+                </div>
+                <div class="portfolio-grid">
+                    <div class="metric-tile metric-positive">
+                        <div class="tile-icon">
+                            <lightning-icon icon-name="utility:moneybag" size="x-small"></lightning-icon>
+                        </div>
+                        <p>Checking Available</p>
+                        <strong>₹<lightning-formatted-number value={checkingBalance}></lightning-formatted-number></strong>
                     </div>
-                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
-                        <p class="slds-text-body_small">Credit Card Due</p>
-                        <p class="slds-text-color_error slds-text-title_bold">₹<lightning-formatted-number value={creditCardBalance}></lightning-formatted-number></p>
+                    <div class="metric-tile metric-alert">
+                        <div class="tile-icon">
+                            <lightning-icon icon-name="utility:credit_card" size="x-small"></lightning-icon>
+                        </div>
+                        <p>Credit Card Due</p>
+                        <strong>₹<lightning-formatted-number value={creditCardBalance}></lightning-formatted-number></strong>
                     </div>
-                    <div class="slds-col slds-size_1-of-2">
-                        <p class="slds-text-body_small">Home Loan Remaining</p>
-                        <p class="slds-text-title_bold">₹<lightning-formatted-number value={loanOutstanding}></lightning-formatted-number></p>
+                    <div class="metric-tile metric-neutral">
+                        <div class="tile-icon">
+                            <lightning-icon icon-name="utility:home" size="x-small"></lightning-icon>
+                        </div>
+                        <p>Home Loan Remaining</p>
+                        <strong>₹<lightning-formatted-number value={loanOutstanding}></lightning-formatted-number></strong>
                     </div>
                 </div>
+            </section>
 
-                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_small slds-m-top_medium">Recent Checking Transactions</p>
-                <ul class="slds-has-dividers_bottom-space">
-                    <template for:each={parsedTransactions} for:item="txn">
-                        <li key={txn.Id} class="slds-item slds-grid slds-grid_align-spread slds-p-vertical_x-small">
-                            <div>
-                                <p class="slds-text-body_regular"><strong>{txn.Description}</strong></p>
-                                <p class="slds-text-body_small slds-text-color_weak">{txn.formattedDate}</p>
-                            </div>
-                            <div class="slds-text-align_right">
-                                <p class={txn.amountClass}>
+            <section class="section-block" aria-labelledby="transactions-title">
+                <div class="section-heading">
+                    <h3 id="transactions-title">Recent Checking Transactions</h3>
+                    <span>{transactionCount} items</span>
+                </div>
+                <template if:true={hasTransactions}>
+                    <ul class="transaction-list">
+                        <template for:each={parsedTransactions} for:item="txn">
+                            <li key={txn.Id} class="transaction-row">
+                                <div class="txn-icon">
+                                    <lightning-icon icon-name={txn.iconName} size="xx-small"></lightning-icon>
+                                </div>
+                                <div class="txn-copy">
+                                    <p>{txn.Description}</p>
+                                    <span>{txn.formattedDate}</span>
+                                </div>
+                                <div class={txn.amountClass}>
                                     {txn.sign}₹<lightning-formatted-number value={txn.Amount}></lightning-formatted-number>
-                                </p>
-                            </div>
-                        </li>
-                    </template>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <template if:false={hasTransactions}>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                        <span>No recent checking transactions available.</span>
+                    </div>
+                </template>
+            </section>
+
+            <section class="section-block action-panel" aria-labelledby="actions-title">
+                <div class="section-heading">
+                    <h3 id="actions-title">Suggested Actions</h3>
+                </div>
+                <ul class="action-list">
+                    <li>
+                        <span>I need to dispute a recent charge</span>
+                        <lightning-button-icon
+                            icon-name="utility:copy"
+                            variant="border-filled"
+                            alternative-text="Copy prompt: dispute a recent charge"
+                            title="Copy prompt"
+                            data-prompt="I need to dispute a recent charge"
+                            onclick={copyPrompt}>
+                        </lightning-button-icon>
+                    </li>
+                    <li>
+                        <span>Help me lower my Home Loan EMI</span>
+                        <lightning-button-icon
+                            icon-name="utility:copy"
+                            variant="border-filled"
+                            alternative-text="Copy prompt: lower Home Loan EMI"
+                            title="Copy prompt"
+                            data-prompt="Help me lower my Home Loan EMI"
+                            onclick={copyPrompt}>
+                        </lightning-button-icon>
+                    </li>
                 </ul>
-            </div>
+                <template if:true={showCopyToast}>
+                    <div class="copy-toast" role="status">
+                        <lightning-icon icon-name="utility:success" variant="success" size="xx-small"></lightning-icon>
+                        <span>Prompt copied. Paste it in the chat.</span>
+                    </div>
+                </template>
+            </section>
         </template>
-    </lightning-card>
+    </article>
 </template>

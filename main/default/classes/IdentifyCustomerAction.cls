@@ -44,22 +44,25 @@ public class IdentifyCustomerAction {
 
     @AuraEnabled
     public static String generateAndSendOtp(String accountId) {
-        // 1. Fetch the user's actual phone number from the database
-        Account acc = [SELECT Id, Phone FROM Account WHERE Id = :accountId LIMIT 1];
+        System.debug('--- STARTING OTP GENERATION ---');
+        System.debug('1. Received Account ID: ' + accountId);
         
-        // 2. Generate the random 4-digit code
+        Account acc = [SELECT Id, Phone FROM Account WHERE Id = :accountId LIMIT 1];
+        System.debug('2. Fetched Phone Number from DB: ' + acc.Phone);
+        
         Integer randomNum = Math.round(Math.random() * 8999) + 1000; 
         String otpCode = String.valueOf(randomNum);
+        System.debug('3. Generated Demo OTP: ' + otpCode);
         
-        // 3. Construct the message
         String message = 'Your secure banking OTP is: ' + otpCode + '. Do not share this with anyone.';
         
-        // 4. Fire the real SMS via Twilio if the phone number exists
         if (String.isNotBlank(acc.Phone)) {
+            System.debug('4. Phone is not blank. Initiating Twilio Service...');
             TwilioService.sendSMS(acc.Phone, message);
+        } else {
+            System.debug('4. ERROR: Phone number is blank on the Account record! SMS aborted.');
         }
         
-        // 5. Return the code back to the LWC so it can validate what the user types
         return otpCode; 
     }
     
