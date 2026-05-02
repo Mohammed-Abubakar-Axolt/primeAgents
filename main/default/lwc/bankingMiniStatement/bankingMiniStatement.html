@@ -13,7 +13,21 @@
             </template>
         </header>
 
-        <template if:false={sessionVerifiedLocal}>
+        <template if:true={noAccountFound}>
+            <section class="not-found-panel" aria-labelledby="not-found-title">
+                <div class="not-found-icon">
+                    <lightning-icon icon-name="utility:warning" variant="inverse" size="small"></lightning-icon>
+                </div>
+                <p class="eyebrow">Account Not Found</p>
+                <h3 id="not-found-title">No account found</h3>
+                <p class="helper-text">
+                    We could not find an account linked with this mobile number.
+                    Please check the number and re-enter it in the chat.
+                </p>
+            </section>
+        </template>
+
+        <template if:true={showOtpPanel}>
             <section class="auth-panel" aria-labelledby="auth-title">
                 <div class="secure-icon">
                     <lightning-icon icon-name="utility:lock" variant="inverse" size="small"></lightning-icon>
@@ -68,6 +82,20 @@
                     </div>
                 </template>
 
+                <template if:true={hasVerificationError}>
+                    <div class="error-message" role="alert">
+                        <lightning-icon icon-name="utility:error" variant="error" size="xx-small"></lightning-icon>
+                        <span>{verificationErrorMessage}</span>
+                    </div>
+                </template>
+
+                <template if:true={isLoadingDetails}>
+                    <div class="otp-status status-info" role="status">
+                        <lightning-icon icon-name="utility:sync" size="xx-small"></lightning-icon>
+                        <span>Verifying session and loading fresh banking details...</span>
+                    </div>
+                </template>
+
                 <div class="auth-actions">
                     <lightning-button
                         variant="brand"
@@ -81,7 +109,7 @@
             </section>
         </template>
 
-        <template if:true={sessionVerifiedLocal}>
+        <template if:true={showDashboard}>
             <section class="customer-panel" aria-label="Customer summary">
                 <div class="customer-main">
                     <div>
@@ -90,10 +118,6 @@
                             <lightning-icon icon-name="utility:world" size="xx-small"></lightning-icon>
                             <span>{preferredLanguage}</span>
                         </p>
-                    </div>
-                    <div class="risk-block">
-                        <span>Retention Risk</span>
-                        <lightning-badge label={churnRisk} class={riskBadgeClass}></lightning-badge>
                     </div>
                 </div>
             </section>

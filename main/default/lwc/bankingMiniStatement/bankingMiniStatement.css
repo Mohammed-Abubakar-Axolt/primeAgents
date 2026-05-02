@@ -77,17 +77,23 @@ h3 {
     --slds-c-badge-text-color: #0b6b3a;
 }
 
-.auth-panel {
+.auth-panel,
+.not-found-panel {
     padding: 1.25rem 1rem 1rem;
     text-align: center;
 }
 
-.secure-icon {
+.secure-icon,
+.not-found-icon {
     width: 2.75rem;
     height: 2.75rem;
     margin: 0 auto 0.75rem;
     border-radius: 50%;
     background: #0176d3;
+}
+
+.not-found-icon {
+    background: #ba0517;
 }
 
 .helper-text {

@@ -102,10 +102,27 @@ public class IdentifyCustomerAction {
     }
     
     @AuraEnabled
-    public static void setSessionVerified(String accountId) {
+    public static Boolean setSessionVerified(String accountId) {
+        if (String.isBlank(accountId)) {
+            throw new AuraHandledException('Account Id is missing. Session could not be verified.');
+        }
+
         Account acc = new Account(Id = accountId, Is_Session_Verified__c = true);
         update acc;
 
         System.debug('Session verified for Account ID: ' + accountId);
+
+        Account verifiedAccount = [
+            SELECT Is_Session_Verified__c
+            FROM Account
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
+
+        if (verifiedAccount.Is_Session_Verified__c != true) {
+            throw new AuraHandledException('Session verification did not persist on the Account record.');
+        }
+
+        return true;
     }
 }
