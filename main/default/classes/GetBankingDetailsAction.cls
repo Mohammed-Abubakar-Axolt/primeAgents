@@ -139,7 +139,7 @@ public class GetBankingDetailsAction {
         }
 
         List<FinancialAccountTransaction> transactions = [
-            SELECT Id, Amount, TransactionDate, Description, Type
+            SELECT Id, Amount, TransactionDate, Description, Type, DebitCreditIndicator
             FROM FinancialAccountTransaction
             WHERE FinancialAccount.Primary_Owner__c = :acc.Id
             ORDER BY TransactionDate DESC

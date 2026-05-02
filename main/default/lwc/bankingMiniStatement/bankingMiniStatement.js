@@ -160,6 +160,23 @@ export default class BankingMiniStatement extends LightningElement {
             .then(result => {
                 console.log('LWC: Apex returned OTP response:', result);
 
+                if (result?.alreadyVerified === true) {
+                    this.otpStatus = 'idle';
+                    this.generatedOtp = '';
+                    this.otpDeliveryMessage = result.message || 'Session is already verified.';
+                    this.detailsStatus = 'loading';
+
+                    return getVerifiedBankingDetails({ accountId: this.accountId }).then(
+                        details => {
+                            this.hydrateVerifiedDetails(details);
+                            this.sessionVerifiedLocal = true;
+                            this.detailsStatus = 'loaded';
+                            this.userEnteredOtp = '';
+                            this.showError = false;
+                        }
+                    );
+                }
+
                 if (result?.success === true) {
                     this.otpStatus = 'sent';
                     this.generatedOtp = result.otpCode;
@@ -252,7 +269,7 @@ export default class BankingMiniStatement extends LightningElement {
         try {
             const rawTxns = JSON.parse(transactionsJson);
             return rawTxns.map(txn => {
-                const isCredit = txn.Type === 'Credit';
+                const isCredit = txn.DebitCreditIndicator === 'Credit';
                 return {
                     ...txn,
                     amountClass: isCredit

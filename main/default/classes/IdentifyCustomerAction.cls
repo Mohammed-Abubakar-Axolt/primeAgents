@@ -1,6 +1,7 @@
 public class IdentifyCustomerAction {
     public class OtpResult {
         @AuraEnabled public Boolean success;
+        @AuraEnabled public Boolean alreadyVerified;
         @AuraEnabled public String otpCode;
         @AuraEnabled public String message;
     }
@@ -26,18 +27,17 @@ public class IdentifyCustomerAction {
             ActionOutput output = new ActionOutput();
             
             try {
-                // Find the Person Account by Phone
-                Account acc = [SELECT Id, Name, Phone FROM Account WHERE Phone = :input.mobileNumber LIMIT 1];
+                Account acc = [
+                    SELECT Id, Name, Phone, Is_Session_Verified__c
+                    FROM Account
+                    WHERE Phone = :input.mobileNumber
+                    LIMIT 1
+                ];
                 
                 output.accountId = acc.Id;
                 output.customerName = acc.Name;
                 output.isFound = true;
-                // Mask phone: show only last 4 digits
                 output.maskedPhone = '******' + input.mobileNumber.right(4); 
-                
-                // Reset verification status for a new session
-                acc.Is_Session_Verified__c = false;
-                update acc;
                 
             } catch (Exception e) {
                 output.isFound = false;
@@ -62,6 +62,7 @@ public class IdentifyCustomerAction {
     public static OtpResult generateAndSendOtpWithStatus(String accountId) {
         OtpResult result = new OtpResult();
         result.success = false;
+        result.alreadyVerified = false;
 
         System.debug('--- STARTING OTP GENERATION ---');
         System.debug('1. Received Account ID: ' + accountId);
@@ -71,8 +72,21 @@ public class IdentifyCustomerAction {
             return result;
         }
         
-        Account acc = [SELECT Id, Phone FROM Account WHERE Id = :accountId LIMIT 1];
+        Account acc = [
+            SELECT Id, Phone, Is_Session_Verified__c
+            FROM Account
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
         System.debug('2. Fetched Phone Number from DB: ' + acc.Phone);
+
+        if (acc.Is_Session_Verified__c == true) {
+            result.success = true;
+            result.alreadyVerified = true;
+            result.message = 'Session is already verified. OTP was not sent.';
+            System.debug('3. Session already verified. Skipping OTP generation and Twilio callout.');
+            return result;
+        }
 
         if (String.isBlank(acc.Phone)) {
             System.debug('4. ERROR: Phone number is blank on the Account record! SMS aborted.');
