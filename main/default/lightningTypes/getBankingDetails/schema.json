@@ -1,5 +1,5 @@
 {
-  "title" : "User Auth",
-  "description" : "User Auth",
+  "title" : "Get Banking Details",
+  "description" : "Get Banking Details",
   "lightning:type" : "@apexClassType/c__GetBankingDetailsAction$ActionOutput"
 }

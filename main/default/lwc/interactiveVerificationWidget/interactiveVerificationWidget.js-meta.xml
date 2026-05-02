@@ -3,9 +3,12 @@
     <apiVersion>62.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>User Verification Widget</masterLabel>
-    <!-- <targetConfigs>
+   <targets>
+        <target>lightning__AgentforceOutput</target>
+    </targets>
+    <targetConfigs>
         <targetConfig targets="lightning__AgentforceOutput">
             <sourceType name="c__user_Auth" />
         </targetConfig>
-    </targetConfigs> -->
+    </targetConfigs>
 </LightningComponentBundle>
