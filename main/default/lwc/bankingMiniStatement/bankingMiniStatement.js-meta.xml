@@ -3,7 +3,9 @@
     <apiVersion>62.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Banking 360 and Mini Statement</masterLabel>
-    <targets>
-        <target>lightning__CopilotCustomUI</target>
-    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AgentforceOutput">
+            <sourceType name="c__getBankingDetails" />
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>

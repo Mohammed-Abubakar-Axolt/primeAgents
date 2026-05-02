@@ -2,8 +2,10 @@
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>62.0</apiVersion>
     <isExposed>true</isExposed>
-    <masterLabel>Interactive Verification Widget</masterLabel>
-    <targets>
-        <target>lightning__CopilotCustomUI</target>
-    </targets>
+    <masterLabel>User Verification Widget</masterLabel>
+    <!-- <targetConfigs>
+        <targetConfig targets="lightning__AgentforceOutput">
+            <sourceType name="c__user_Auth" />
+        </targetConfig>
+    </targetConfigs> -->
 </LightningComponentBundle>

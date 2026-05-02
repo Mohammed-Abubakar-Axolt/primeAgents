@@ -1,0 +1,5 @@
+{
+  "title" : "User Auth",
+  "description" : "User Auth",
+  "lightning:type" : "@apexClassType/c__IdentifyCustomerAction$ActionOutput"
+}
