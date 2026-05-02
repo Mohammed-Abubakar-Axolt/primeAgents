@@ -1,6 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
-import generateAndSendOtp from '@salesforce/apex/OtpServiceController.generateAndSendOtp';
-import setSessionVerified from '@salesforce/apex/OtpServiceController.setSessionVerified';
+import generateAndSendOtp from '@salesforce/apex/IdentifyCustomerAction.generateAndSendOtp';
+import setSessionVerified from '@salesforce/apex/IdentifyCustomerAction.setSessionVerified';
 
 export default class InteractiveVerificationWidget extends LightningElement {
     // Inputs from Agentforce
