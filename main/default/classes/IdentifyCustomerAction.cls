@@ -1,4 +1,10 @@
 public class IdentifyCustomerAction {
+    public class OtpResult {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String otpCode;
+        @AuraEnabled public String message;
+    }
+
     
     public class ActionInput {
         @InvocableVariable(required=true label='Mobile Number' description='The 10-digit mobile number provided by the user')
@@ -44,11 +50,35 @@ public class IdentifyCustomerAction {
 
     @AuraEnabled
     public static String generateAndSendOtp(String accountId) {
+        OtpResult result = generateAndSendOtpWithStatus(accountId);
+        if (result.success != true) {
+            throw new AuraHandledException(result.message);
+        }
+
+        return result.otpCode;
+    }
+
+    @AuraEnabled
+    public static OtpResult generateAndSendOtpWithStatus(String accountId) {
+        OtpResult result = new OtpResult();
+        result.success = false;
+
         System.debug('--- STARTING OTP GENERATION ---');
         System.debug('1. Received Account ID: ' + accountId);
+
+        if (String.isBlank(accountId)) {
+            result.message = 'Account Id is missing. OTP was not sent.';
+            return result;
+        }
         
         Account acc = [SELECT Id, Phone FROM Account WHERE Id = :accountId LIMIT 1];
         System.debug('2. Fetched Phone Number from DB: ' + acc.Phone);
+
+        if (String.isBlank(acc.Phone)) {
+            System.debug('4. ERROR: Phone number is blank on the Account record! SMS aborted.');
+            result.message = 'No registered phone number was found for this customer.';
+            return result;
+        }
         
         Integer randomNum = Math.round(Math.random() * 8999) + 1000; 
         String otpCode = String.valueOf(randomNum);
@@ -56,14 +86,19 @@ public class IdentifyCustomerAction {
         
         String message = 'Your secure banking OTP is: ' + otpCode + '. Do not share this with anyone.';
         
-        if (String.isNotBlank(acc.Phone)) {
-            System.debug('4. Phone is not blank. Initiating Twilio Service...');
-            TwilioService.sendSMS(acc.Phone, message);
+        System.debug('4. Phone is not blank. Initiating Twilio Service...');
+        TwilioService.SmsResult smsResult = TwilioService.sendSMS(acc.Phone, message);
+
+        result.success = smsResult.success;
+        result.message = smsResult.message;
+
+        if (smsResult.success == true) {
+            result.otpCode = otpCode;
         } else {
-            System.debug('4. ERROR: Phone number is blank on the Account record! SMS aborted.');
+            System.debug('5. ERROR: Twilio could not send OTP. ' + smsResult.message);
         }
         
-        return otpCode; 
+        return result; 
     }
     
     @AuraEnabled

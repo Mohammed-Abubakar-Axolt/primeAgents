@@ -1,6 +1,9 @@
 import { LightningElement, api, track } from 'lwc';
-import generateAndSendOtp from '@salesforce/apex/IdentifyCustomerAction.generateAndSendOtp';
+import generateAndSendOtpWithStatus from '@salesforce/apex/IdentifyCustomerAction.generateAndSendOtpWithStatus';
 import setSessionVerified from '@salesforce/apex/IdentifyCustomerAction.setSessionVerified';
+
+const otpRequestCache = new Map();
+const OTP_REQUEST_CACHE_MS = 60000;
 
 export default class BankingMiniStatement extends LightningElement {
     // Inputs from Apex Invocable
@@ -22,6 +25,8 @@ export default class BankingMiniStatement extends LightningElement {
     @track userEnteredOtp = '';
     @track showError = false;
     @track showCopyToast = false;
+    @track otpStatus = 'idle';
+    @track otpDeliveryMessage = '';
 
     get riskBadgeClass() {
         if (this.churnRisk === 'High') return 'risk-badge risk-high';
@@ -35,6 +40,38 @@ export default class BankingMiniStatement extends LightningElement {
 
     get transactionCount() {
         return this.parsedTransactions.length;
+    }
+
+    get isOtpSending() {
+        return this.otpStatus === 'sending';
+    }
+
+    get isOtpSent() {
+        return this.otpStatus === 'sent';
+    }
+
+    get hasOtpDeliveryError() {
+        return this.otpStatus === 'error';
+    }
+
+    get isVerifyDisabled() {
+        return this.isOtpSending || !this.generatedOtp || this.hasOtpDeliveryError;
+    }
+
+    get otpStatusText() {
+        if (this.isOtpSending) {
+            return 'Sending secure OTP...';
+        }
+
+        if (this.isOtpSent) {
+            return this.otpDeliveryMessage || 'OTP sent successfully.';
+        }
+
+        if (this.hasOtpDeliveryError) {
+            return this.otpDeliveryMessage || 'Unable to send OTP. Please try again.';
+        }
+
+        return '';
     }
 
     connectedCallback() {
@@ -72,17 +109,67 @@ export default class BankingMiniStatement extends LightningElement {
         }
     }
 
-    sendNewOtp() {
-        console.log('LWC: Initiating OTP request for Account ID:', this.accountId);
+    sendNewOtp(forceRefresh = false) {
+        if (!this.accountId) {
+            this.otpStatus = 'error';
+            this.otpDeliveryMessage = 'Account information is missing. OTP was not sent.';
+            return;
+        }
 
-        generateAndSendOtp({ accountId: this.accountId })
+        const cachedRequest = otpRequestCache.get(this.accountId);
+        const now = Date.now();
+
+        if (
+            !forceRefresh &&
+            cachedRequest &&
+            now - cachedRequest.createdAt < OTP_REQUEST_CACHE_MS
+        ) {
+            console.log('LWC: Reusing in-flight OTP request for Account ID:', this.accountId);
+            this.handleOtpRequest(cachedRequest.promise);
+            return;
+        }
+
+        console.log('LWC: Initiating OTP request for Account ID:', this.accountId);
+        this.otpStatus = 'sending';
+        this.otpDeliveryMessage = '';
+        this.generatedOtp = '';
+
+        const otpRequest = generateAndSendOtpWithStatus({ accountId: this.accountId });
+        otpRequestCache.set(this.accountId, {
+            createdAt: now,
+            promise: otpRequest
+        });
+
+        this.handleOtpRequest(otpRequest);
+    }
+
+    handleOtpRequest(otpRequest) {
+        this.otpStatus = 'sending';
+
+        otpRequest
             .then(result => {
-                console.log('LWC: Apex returned OTP successfully:', result);
-                this.generatedOtp = result;
+                console.log('LWC: Apex returned OTP response:', result);
+
+                if (result?.success === true) {
+                    this.otpStatus = 'sent';
+                    this.generatedOtp = result.otpCode;
+                    this.otpDeliveryMessage = result.message || 'OTP sent successfully.';
+                } else {
+                    otpRequestCache.delete(this.accountId);
+                    this.otpStatus = 'error';
+                    this.generatedOtp = '';
+                    this.otpDeliveryMessage =
+                        result?.message || 'Unable to send OTP. Please try again.';
+                }
+
                 this.userEnteredOtp = '';
                 this.showError = false;
             })
             .catch(error => {
+                otpRequestCache.delete(this.accountId);
+                this.otpStatus = 'error';
+                this.generatedOtp = '';
+                this.otpDeliveryMessage = this.getErrorMessage(error);
                 console.error(
                     'LWC: CRITICAL ERROR calling Apex generateAndSendOtp:',
                     JSON.stringify(error)
@@ -95,6 +182,11 @@ export default class BankingMiniStatement extends LightningElement {
     }
 
     verifyOtp() {
+        if (!this.generatedOtp || this.hasOtpDeliveryError) {
+            this.showError = true;
+            return;
+        }
+
         if (this.userEnteredOtp === this.generatedOtp) {
             this.showError = false;
 
@@ -107,7 +199,15 @@ export default class BankingMiniStatement extends LightningElement {
     }
 
     resendOtp() {
-        this.sendNewOtp();
+        this.sendNewOtp(true);
+    }
+
+    getErrorMessage(error) {
+        return (
+            error?.body?.message ||
+            error?.message ||
+            'Unable to send OTP. Please try again.'
+        );
     }
 
     copyPrompt(event) {

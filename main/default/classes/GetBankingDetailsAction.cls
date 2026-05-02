@@ -52,7 +52,7 @@ public class GetBankingDetailsAction {
                 if (innerData.isVerified == true) {
                     innerData.statusMessage = 'Session is already verified. Retrieving the 360-degree banking profile and recent transactions for ' + acc.Name + '.';
                 } else {
-                    innerData.statusMessage = 'A secure verification OTP has been dispatched to your registered mobile number (' + innerData.maskedPhone + '). Please complete the verification in the secure widget below to access your banking details.';
+                    innerData.statusMessage = 'Please complete the secure verification for your registered mobile number (' + innerData.maskedPhone + ') in the widget below to access your banking details.';
                 }
                 
                 // 2. Fetch Financial Accounts 

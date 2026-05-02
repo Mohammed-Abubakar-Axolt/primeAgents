@@ -21,12 +21,32 @@
                 <p class="eyebrow">Secure Step</p>
                 <h3 id="auth-title">Verify customer identity</h3>
                 <p class="helper-text">
-                    We've sent a 4-digit OTP to <strong>{maskedPhone}</strong>.
+                    We'll send a 4-digit OTP to <strong>{maskedPhone}</strong>.
                 </p>
 
-                <p class="demo-code">
-                    Demo OTP: <strong>{generatedOtp}</strong>
-                </p>
+                <template if:true={isOtpSending}>
+                    <div class="otp-status status-info" role="status">
+                        <lightning-icon icon-name="utility:sync" size="xx-small"></lightning-icon>
+                        <span>{otpStatusText}</span>
+                    </div>
+                </template>
+
+                <template if:true={isOtpSent}>
+                    <div class="otp-status status-success" role="status">
+                        <lightning-icon icon-name="utility:success" variant="success" size="xx-small"></lightning-icon>
+                        <span>{otpStatusText}</span>
+                    </div>
+                    <p class="demo-code">
+                        Demo OTP: <strong>{generatedOtp}</strong>
+                    </p>
+                </template>
+
+                <template if:true={hasOtpDeliveryError}>
+                    <div class="otp-status status-error" role="alert">
+                        <lightning-icon icon-name="utility:error" variant="error" size="xx-small"></lightning-icon>
+                        <span>{otpStatusText}</span>
+                    </div>
+                </template>
 
                 <div class="otp-field">
                     <lightning-input
@@ -36,6 +56,7 @@
                         value={userEnteredOtp}
                         onchange={handleOtpChange}
                         placeholder="Enter OTP"
+                        disabled={isVerifyDisabled}
                         class="otp-input">
                     </lightning-input>
                 </div>
@@ -52,9 +73,10 @@
                         variant="brand"
                         label="Verify Identity"
                         onclick={verifyOtp}
+                        disabled={isVerifyDisabled}
                         class="primary-action">
                     </lightning-button>
-                    <button type="button" class="link-button" onclick={resendOtp}>Resend OTP</button>
+                    <button type="button" class="link-button" onclick={resendOtp} disabled={isOtpSending}>Resend OTP</button>
                 </div>
             </section>
         </template>
