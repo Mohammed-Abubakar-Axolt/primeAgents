@@ -1,0 +1,31 @@
+<template>
+    <lightning-card title={accountName} icon-name="standard:account">
+        <div class="slds-p-horizontal_medium">
+            <!-- Balance Display -->
+            <div class="slds-m-bottom_medium slds-text-align_center">
+                <p class="slds-text-title_caps slds-text-color_weak">Available Balance</p>
+                <p class="slds-text-heading_large slds-text-color_success">
+                    <lightning-formatted-number value={currentBalance} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>
+                </p>
+            </div>
+
+            <!-- Mini Statement List -->
+            <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_small">Recent Transactions</p>
+            <ul class="slds-has-dividers_bottom-space">
+                <template for:each={parsedTransactions} for:item="txn">
+                    <li key={txn.Id} class="slds-item slds-grid slds-grid_align-spread slds-p-vertical_x-small">
+                        <div>
+                            <p class="slds-text-body_regular"><strong>{txn.Description}</strong></p>
+                            <p class="slds-text-body_small slds-text-color_weak">{txn.formattedDate}</p>
+                        </div>
+                        <div class="slds-text-align_right">
+                            <p class={txn.amountClass}>
+                                {txn.sign}<lightning-formatted-number value={txn.Amount} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>
+                            </p>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+        </div>
+    </lightning-card>
+</template>
