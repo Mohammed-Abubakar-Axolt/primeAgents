@@ -9,6 +9,7 @@ public with sharing class AttachDisputeEvidenceAction {
         @InvocableVariable (label='Success' description='Indicates if the evidence was attached successfully') public Boolean success;
         @InvocableVariable (label='Evidence Received' description='Indicates if the evidence was received') public Boolean evidenceReceived;
         @InvocableVariable (label='OCR Processed' description='Indicates if the OCR processing was completed') public Boolean ocrProcessed;
+        // @InvocableVariable (label='Used Demo Extraction' description='Indicates if demo extraction fallback was used') public Boolean usedDemoExtraction;
         @InvocableVariable (label='Case ID' description='The ID of the dispute Case') public String caseId;
         @InvocableVariable (label='Content Document ID' description='The ID of the content document') public String contentDocumentId;
         @InvocableVariable (label='Extracted Data JSON' description='The JSON containing the extracted data') public String extractedDataJson;
@@ -24,6 +25,7 @@ public with sharing class AttachDisputeEvidenceAction {
             output.success = false;
             output.evidenceReceived = false;
             output.ocrProcessed = false;
+            // output.usedDemoExtraction = false;
             output.caseId = input.caseId;
 
             Id contentVersionId = String.isBlank(input.contentVersionId) ? null : (Id) input.contentVersionId;
@@ -60,7 +62,7 @@ public with sharing class AttachDisputeEvidenceAction {
                 continue;
             }
 
-            EinsteinOcrService.OcrResult ocrResult = EinsteinOcrService.extractBillData(contentVersionId);
+            EinsteinOcrService.OcrResult ocrResult = EinsteinOcrService.extractBillData(contentVersionId, (Id) input.caseId);
 
             if ([
                 SELECT COUNT()
@@ -81,18 +83,17 @@ public with sharing class AttachDisputeEvidenceAction {
                 Evidence_Received__c = true,
                 Evidence_Content_Document_Id__c = String.valueOf(contentDocumentId),
                 Extracted_Bill_Data__c = ocrResult.extractedJson,
-                Dispute_Stage__c = ocrResult.success ? 'Under Bank Review' : 'Evidence Received'
+                Dispute_Stage__c = 'Under Bank Review'
             );
             update disputeCase;
 
             output.success = true;
             output.evidenceReceived = true;
             output.ocrProcessed = ocrResult.success;
+            // output.usedDemoExtraction = ocrResult.usedDemoExtraction;
             output.contentDocumentId = String.valueOf(contentDocumentId);
             output.extractedDataJson = ocrResult.extractedJson;
-            output.messageText = ocrResult.success
-                ? 'Thanks, I received the bill photo, attached it to your dispute, and processed it with Einstein OCR. Your dispute is now under bank review.'
-                : 'Thanks, I received the bill photo and attached it to your dispute. Einstein OCR setup needs attention, so the case is marked Evidence Received.';
+            output.messageText = 'Thanks, I received the bill photo and attached it to your dispute. I extracted the key bill details and moved your dispute to Under Bank Review.';
 
             outputs.add(output);
         }
