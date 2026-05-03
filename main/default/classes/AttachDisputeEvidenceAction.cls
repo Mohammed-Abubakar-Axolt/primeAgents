@@ -1,18 +1,18 @@
 public with sharing class AttachDisputeEvidenceAction {
     public class ActionInput {
-        @InvocableVariable(required=true) public String caseId;
-        @InvocableVariable public String contentVersionId;
-        @InvocableVariable public String contentDocumentId;
+        @InvocableVariable(required=true label='Case ID' description='The ID of the dispute Case') public String caseId;
+        @InvocableVariable (label='Content Version ID' description='The ID of the content version') public String contentVersionId;
+        @InvocableVariable (label='Content Document ID' description='The ID of the content document') public String contentDocumentId;
     }
 
     public class ActionOutput {
-        @InvocableVariable public Boolean success;
-        @InvocableVariable public Boolean evidenceReceived;
-        @InvocableVariable public Boolean ocrProcessed;
-        @InvocableVariable public String caseId;
-        @InvocableVariable public String contentDocumentId;
-        @InvocableVariable public String extractedDataJson;
-        @InvocableVariable public String messageText;
+        @InvocableVariable (label='Success' description='Indicates if the evidence was attached successfully') public Boolean success;
+        @InvocableVariable (label='Evidence Received' description='Indicates if the evidence was received') public Boolean evidenceReceived;
+        @InvocableVariable (label='OCR Processed' description='Indicates if the OCR processing was completed') public Boolean ocrProcessed;
+        @InvocableVariable (label='Case ID' description='The ID of the dispute Case') public String caseId;
+        @InvocableVariable (label='Content Document ID' description='The ID of the content document') public String contentDocumentId;
+        @InvocableVariable (label='Extracted Data JSON' description='The JSON containing the extracted data') public String extractedDataJson;
+        @InvocableVariable (label='Message Text' description='The message text for the output') public String messageText;
     }
 
     @InvocableMethod(label='Attach Dispute Evidence' description='Links an uploaded WhatsApp bill image to the dispute and processes it with Einstein OCR.' callout=true)
