@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dispute_Stage__c</fullName>
+    <label>Dispute Stage</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>New</fullName>
+                <default>true</default>
+                <label>New</label>
+            </value>
+            <value>
+                <fullName>Transaction Identified</fullName>
+                <default>false</default>
+                <label>Transaction Identified</label>
+            </value>
+            <value>
+                <fullName>Provisional Credit Issued</fullName>
+                <default>false</default>
+                <label>Provisional Credit Issued</label>
+            </value>
+            <value>
+                <fullName>Evidence Requested</fullName>
+                <default>false</default>
+                <label>Evidence Requested</label>
+            </value>
+            <value>
+                <fullName>Evidence Received</fullName>
+                <default>false</default>
+                <label>Evidence Received</label>
+            </value>
+            <value>
+                <fullName>Under Bank Review</fullName>
+                <default>false</default>
+                <label>Under Bank Review</label>
+            </value>
+            <value>
+                <fullName>Resolved - Customer Credited</fullName>
+                <default>false</default>
+                <label>Resolved - Customer Credited</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>Rejected</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
