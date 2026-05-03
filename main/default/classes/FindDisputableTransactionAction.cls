@@ -1,23 +1,23 @@
 public with sharing class FindDisputableTransactionAction {
     public class ActionInput {
-        @InvocableVariable public String accountId;
-        @InvocableVariable public String mobileNumber;
-        @InvocableVariable public Decimal amount;
-        @InvocableVariable public String merchantOrLocationHint;
-        @InvocableVariable public String customerMessage;
+        @InvocableVariable (label='Account ID' description='The Salesforce Account ID of the identified customer') public String accountId;
+        @InvocableVariable (label='Mobile Number' description='The mobile number of the identified customer') public String mobileNumber;
+        @InvocableVariable (label='Amount' description='The amount of the disputed transaction') public Decimal amount;
+        @InvocableVariable (label='Merchant or Location Hint' description='A hint about the merchant or location of the disputed transaction') public String merchantOrLocationHint;
+        @InvocableVariable (label='Customer Message' description='The message from the customer regarding the dispute') public String customerMessage;
     }
 
     public class ActionOutput {
-        @InvocableVariable public Boolean isFound;
-        @InvocableVariable public Boolean isVerified;
-        @InvocableVariable public Boolean matchFound;
-        @InvocableVariable public Boolean needsSelection;
-        @InvocableVariable public String accountId;
-        @InvocableVariable public String selectedTransactionId;
-        @InvocableVariable public String financialAccountId;
-        @InvocableVariable public Decimal matchConfidence;
-        @InvocableVariable public String candidateTransactionsJson;
-        @InvocableVariable public String messageText;
+        @InvocableVariable (label='Is Found' description='Indicates if the customer was found') public Boolean isFound;
+        @InvocableVariable (label='Is Verified' description='Indicates if the customer is verified') public Boolean isVerified;
+        @InvocableVariable (label='Match Found' description='Indicates if a matching transaction was found') public Boolean matchFound;
+        @InvocableVariable (label='Needs Selection' description='Indicates if the user needs to select a transaction') public Boolean needsSelection;
+        @InvocableVariable (label='Account ID' description='The Salesforce Account ID of the identified customer') public String accountId;
+        @InvocableVariable (label='Selected Transaction ID' description='The ID of the selected transaction') public String selectedTransactionId;
+        @InvocableVariable (label='Financial Account ID' description='The ID of the financial account') public String financialAccountId;
+        @InvocableVariable (label='Match Confidence' description='The confidence level of the match') public Decimal matchConfidence;
+        @InvocableVariable (label='Candidate Transactions JSON' description='JSON representation of candidate transactions') public String candidateTransactionsJson;
+        @InvocableVariable (label='Message Text' description='The message text for the output') public String messageText;
     }
 
     private class Candidate {

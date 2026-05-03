@@ -1,20 +1,20 @@
 public with sharing class CreateCardDisputeAction {
     public class ActionInput {
-        @InvocableVariable public String accountId;
-        @InvocableVariable public String mobileNumber;
-        @InvocableVariable(required=true) public String financialAccountTransactionId;
-        @InvocableVariable public String customerStatement;
-        @InvocableVariable public String merchantOrLocationHint;
+        @InvocableVariable (label='Account ID' description='The Salesforce Account ID of the identified customer') public String accountId;
+        @InvocableVariable (label='Mobile Number' description='The mobile number of the identified customer') public String mobileNumber;
+        @InvocableVariable(required=true label='Financial Account Transaction ID' description='The ID of the financial account transaction') public String financialAccountTransactionId;
+        @InvocableVariable (label='Customer Statement' description='The statement from the customer regarding the dispute') public String customerStatement;
+        @InvocableVariable (label='Merchant or Location Hint' description='A hint about the merchant or location of the disputed transaction') public String merchantOrLocationHint;
     }
 
     public class ActionOutput {
-        @InvocableVariable public Boolean success;
-        @InvocableVariable public Boolean provisionalCreditIssued;
-        @InvocableVariable public String caseId;
-        @InvocableVariable public String caseNumber;
-        @InvocableVariable public String provisionalCreditTransactionId;
-        @InvocableVariable public String disputeStage;
-        @InvocableVariable public String messageText;
+        @InvocableVariable (label='Success' description='Indicates if the dispute was created successfully') public Boolean success;
+        @InvocableVariable (label='Provisional Credit Issued' description='Indicates if a provisional credit was issued') public Boolean provisionalCreditIssued;
+        @InvocableVariable (label='Case ID' description='The ID of the created case') public String caseId;
+        @InvocableVariable (label='Case Number' description='The number of the created case') public String caseNumber;
+        @InvocableVariable (label='Provisional Credit Transaction ID' description='The ID of the provisional credit transaction') public String provisionalCreditTransactionId;
+        @InvocableVariable (label='Dispute Stage' description='The stage of the dispute') public String disputeStage;
+        @InvocableVariable (label='Message Text' description='The message text for the output') public String messageText;
     }
 
     @InvocableMethod(label='Create Card Dispute' description='Creates a card dispute Case and issues a provisional credit.')
